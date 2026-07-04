@@ -1,0 +1,454 @@
+/* ============================================
+   Customer Chat Widget Styles
+   Designed to be embedded on any website
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.csai-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  --w-primary: #0055FF;
+  --w-navy: #011931;
+  --w-bg: #FFFFFF;
+  --w-chat-bg: #f5f8fc;
+  --w-border: #D1D3D4;
+  --w-text: #000000;
+  --w-text-muted: #A7A9AC;
+  --w-success: #00b86b;
+  --w-danger: #ef4444;
+}
+
+/* Floating Action Button */
+.csai-fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--w-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 14px rgba(0, 85, 255, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.csai-fab:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 6px 20px rgba(0, 85, 255, 0.5),
+    0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.csai-fab.open {
+  transform: rotate(90deg);
+  background: var(--w-danger);
+}
+
+.csai-fab svg {
+  width: 26px;
+  height: 26px;
+  color: #fff;
+}
+
+.csai-fab-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: var(--w-danger);
+  border-radius: 50%;
+  border: 3px solid #fff;
+  animation: badgePulse 2s ease infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Chat Window */
+.csai-window {
+  position: absolute;
+  bottom: 76px;
+  right: 0;
+  width: 380px;
+  height: 560px;
+  background: var(--w-bg);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.csai-window.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+/* Header */
+.csai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: var(--w-primary);
+  color: #fff;
+}
+
+.csai-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.csai-header-avatar {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.csai-header-avatar svg {
+  width: 22px;
+  height: 22px;
+}
+
+.csai-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.csai-status {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.csai-status.online {
+  opacity: 1;
+}
+
+.csai-status.online::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--w-success);
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.csai-close {
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.csai-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.csai-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Messages */
+.csai-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--w-chat-bg);
+}
+
+.csai-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.csai-messages::-webkit-scrollbar-thumb {
+  background: var(--w-border);
+  border-radius: 4px;
+}
+
+/* System message */
+.csai-msg-system {
+  text-align: center;
+  padding: 6px 14px;
+  color: var(--w-text-muted);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  align-self: center;
+}
+
+/* Message */
+.csai-msg {
+  display: flex;
+  gap: 8px;
+  max-width: 85%;
+  animation: msgSlideIn 0.3s ease;
+}
+
+@keyframes msgSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.csai-msg-right {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.csai-msg-left {
+  align-self: flex-start;
+}
+
+.csai-msg-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: var(--w-navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.csai-msg-bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  position: relative;
+}
+
+.csai-msg-bubble.customer {
+  background: var(--w-primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.csai-msg-bubble.bot {
+  background: var(--w-bg);
+  color: var(--w-text);
+  border: 1px solid var(--w-border);
+  border-bottom-left-radius: 4px;
+}
+
+.csai-msg-bubble.agent {
+  background: var(--w-navy);
+  color: #fff;
+  border-bottom-left-radius: 4px;
+}
+
+.csai-msg-bubble p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.csai-msg-time {
+  display: block;
+  font-size: 10px;
+  color: var(--w-text-muted);
+  margin-top: 4px;
+  text-align: right;
+}
+
+.csai-msg-right .csai-msg-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Suggestions */
+.csai-suggestions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.csai-suggestions-label {
+  font-size: 12px;
+  color: var(--w-text-muted);
+  margin: 0 0 4px 0;
+}
+
+.csai-suggestion-btn {
+  padding: 8px 14px;
+  background: var(--w-bg);
+  border: 1px solid var(--w-primary);
+  border-radius: 20px;
+  color: var(--w-primary);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.csai-suggestion-btn:hover {
+  background: var(--w-primary);
+  color: #fff;
+  transform: translateX(4px);
+}
+
+/* Typing Indicator */
+.csai-typing {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 16px;
+  background: var(--w-bg);
+  border: 1px solid var(--w-border);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+}
+
+.csai-typing span {
+  width: 6px;
+  height: 6px;
+  background: var(--w-text-muted);
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.csai-typing span:nth-child(1) { animation-delay: 0s; }
+.csai-typing span:nth-child(2) { animation-delay: 0.2s; }
+.csai-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Input Area */
+.csai-input-area {
+  padding: 12px 14px 8px;
+  background: var(--w-bg);
+  border-top: 1px solid var(--w-border);
+}
+
+.csai-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--w-chat-bg);
+  border: 1px solid var(--w-border);
+  border-radius: 14px;
+  padding: 4px 4px 4px 14px;
+  transition: all 0.2s;
+}
+
+.csai-input-wrapper:focus-within {
+  border-color: var(--w-primary);
+  background: var(--w-bg);
+}
+
+.csai-input-wrapper textarea {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--w-text);
+  font-size: 14px;
+  padding: 8px 0;
+  resize: none;
+  outline: none;
+  max-height: 80px;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.csai-input-wrapper textarea::placeholder {
+  color: var(--w-text-muted);
+}
+
+.csai-send-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  background: var(--w-primary);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.csai-send-btn:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.csai-send-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: var(--w-text-muted);
+}
+
+.csai-send-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.csai-powered {
+  text-align: center;
+  font-size: 10px;
+  color: var(--w-text-muted);
+  padding: 6px 0 2px;
+}
+
+/* Responsive */
+@media (max-width: 420px) {
+  .csai-widget {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  .csai-window {
+    width: calc(100vw - 24px);
+    height: calc(100vh - 100px);
+    bottom: 72px;
+    right: 0;
+    border-radius: 16px;
+  }
+
+  .csai-fab {
+    width: 54px;
+    height: 54px;
+  }
+}

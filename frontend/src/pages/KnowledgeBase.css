@@ -1,0 +1,378 @@
+/* Knowledge Base Styles - Fixed Class Names */
+.kb-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+}
+
+/* Header matches dashboard styles loosely */
+.kb-header {
+  height: 60px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.kb-back-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.kb-back-link:hover {
+  background: var(--bg-light-blue);
+  color: var(--accent);
+}
+
+.kb-back-link svg {
+  width: 20px; height: 20px;
+}
+
+.header-logo {
+  color: var(--accent);
+  width: 28px; height: 28px;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-lang {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.header-lang button {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.header-lang button.active {
+  background: var(--bg-primary);
+  color: var(--accent);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.header-agent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 20px;
+  border-left: 1px solid var(--border);
+}
+
+.agent-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-navy);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.agent-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-logout {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.header-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.header-logout svg {
+  width: 18px; height: 18px;
+}
+
+/* Content */
+.kb-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Upload Section */
+.kb-upload-zone {
+  position: relative;
+  background: var(--bg-primary);
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.kb-upload-zone:hover, .kb-upload-zone.drag-active {
+  border-color: var(--accent);
+  background: var(--bg-light-blue);
+}
+
+.kb-upload-zone.uploading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.kb-upload-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: var(--accent);
+}
+
+.kb-upload-icon svg {
+  width: 32px; height: 32px;
+}
+
+.kb-upload-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.kb-upload-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.kb-upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Documents Grid */
+.kb-docs-section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+}
+
+.kb-docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.kb-empty {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--bg-primary);
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+}
+
+.kb-empty-icon {
+  font-size: 48px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.kb-empty p {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.kb-empty-sub {
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  font-weight: normal !important;
+}
+
+/* Document Card */
+.kb-doc-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+}
+
+.kb-doc-card:hover {
+  border-color: var(--text-muted);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.doc-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-light-blue);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.doc-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-name {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.doc-uploader {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.doc-status-actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.doc-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.doc-status.ready {
+  background: rgba(67, 233, 123, 0.1);
+  color: var(--success);
+}
+
+.doc-status.processing {
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--warning);
+}
+
+.doc-status.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.doc-error {
+  font-size: 11px;
+  color: var(--danger);
+  margin-left: 8px;
+}
+
+.doc-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.doc-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.doc-delete-btn svg {
+  width: 16px;
+  height: 16px;
+}
