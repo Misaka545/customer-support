@@ -1,10 +1,10 @@
 # Customer Support 
 
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
-![Express](https://img.shields.io/badge/Express.js-4.x-red)
-![React](https://img.shields.io/badge/React-18%2B-blue)
-![MongoDB](https://img.shields.io/badge/MongoDB-6.0%2B-green)
-![Socket.io](https://img.shields.io/badge/Socket.io-4.x-orange)
+![Node.js](https://img.shields.io/badge/Node.js-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
 
 **Customer Support** is a real-time customer support system with AI-powered response suggestions and seamless agent handoff. This project features a dual-interface system: a **Customer Widget** embedded in websites and an **Agent Dashboard** for support staff.
 
