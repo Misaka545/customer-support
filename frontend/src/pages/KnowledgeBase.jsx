@@ -1,8 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../services/api';
 import './KnowledgeBase.css';
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 16, scale: 0.97 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { delay: i * 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] }
+  })
+};
 
 export default function KnowledgeBase() {
   const { agent, logout, isAdmin } = useAuth();
@@ -92,49 +104,31 @@ export default function KnowledgeBase() {
 
   return (
     <div className="kb-page">
-      {/* Header */}
-      <header className="kb-header">
-        <div className="header-left">
-          <a href="/" className="kb-back-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15,18 9,12 15,6" />
-            </svg>
-          </a>
-          <div className="header-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </div>
-          <h1 className="header-title">{t('knowledgeBase')}</h1>
-        </div>
-
-        <div className="header-right">
-
-          <div className="header-agent">
-            <div className="agent-avatar">{agent?.displayName?.charAt(0)?.toUpperCase()}</div>
-            <span className="agent-name">{agent?.displayName}</span>
-          </div>
-          <button className="header-logout" onClick={logout}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16,17 21,12 16,7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
-        </div>
-      </header>
+      {/* Header - Unified Theme */}
+      <motion.header
+        className="page-header"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <h1 className="page-title">
+          <BookOpen size={22} className="title-icon" /> {t('knowledgeBase') || 'Kho tri thức AI'}
+        </h1>
+      </motion.header>
 
       {/* Content */}
       <main className="kb-content">
         {/* Upload area */}
         {isAdmin && (
-          <div
+          <motion.div
             className={`kb-upload-zone ${dragActive ? 'drag-active' : ''} ${uploading ? 'uploading' : ''}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
+            whileHover={{ scale: 1.005 }}
+            whileTap={{ scale: 0.995 }}
           >
             <input
               ref={fileInputRef}
@@ -151,18 +145,22 @@ export default function KnowledgeBase() {
               </div>
             ) : (
               <>
-                <div className="kb-upload-icon">
+                <motion.div
+                  className="kb-upload-icon"
+                  animate={dragActive ? { y: -8, scale: 1.1 } : { y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17,8 12,3 7,8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                </div>
+                </motion.div>
                 <p className="kb-upload-text">{t('dragDrop')}</p>
                 <p className="kb-upload-hint">{t('supportedFormats')}</p>
               </>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Documents list */}
@@ -170,15 +168,28 @@ export default function KnowledgeBase() {
           <h2>{t('knowledgeBase')} ({documents.length})</h2>
 
           {documents.length === 0 ? (
-            <div className="kb-empty">
-              <div className="kb-empty-icon">[!]</div>
+            <motion.div
+              className="kb-empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="kb-empty-icon">📚</div>
               <p>{t('noDocuments')}</p>
               <p className="kb-empty-sub">{t('uploadFirst')}</p>
-            </div>
+            </motion.div>
           ) : (
             <div className="kb-docs-grid">
-              {documents.map((doc) => (
-                <div key={doc._id} className="kb-doc-card">
+              {documents.map((doc, index) => (
+                <motion.div
+                  key={doc._id}
+                  className="kb-doc-card"
+                  custom={index}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover={{ y: -3 }}
+                >
                   <div className="doc-icon">
                     {doc.mimeType?.includes('pdf') ? 'PDF' :
                      doc.mimeType?.includes('text') ? 'TXT' : 'DOC'}
@@ -202,27 +213,29 @@ export default function KnowledgeBase() {
 
                   <div className="doc-status-actions">
                     <span className={`doc-status ${doc.status}`}>
-                      {doc.status === 'ready' ? '[OK] ' + t('ready') :
-                       doc.status === 'processing' ? '[...] ' + t('processing') :
-                       '[ERROR] ' + t('error')}
+                      {doc.status === 'ready' ? '✓ ' + t('ready') :
+                       doc.status === 'processing' ? '⟳ ' + t('processing') :
+                       '✕ ' + t('error')}
                     </span>
                     {doc.errorMessage && (
                       <span className="doc-error">{doc.errorMessage}</span>
                     )}
                     {isAdmin && (
-                      <button
+                      <motion.button
                         className="doc-delete-btn"
                         onClick={() => handleDelete(doc._id)}
                         title={t('delete')}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <polyline points="3,6 5,6 21,6" />
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
-                      </button>
+                      </motion.button>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}

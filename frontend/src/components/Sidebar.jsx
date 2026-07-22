@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, Search } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import './Sidebar.css';
 
 const STATUS_MAP = {
-  Bot_Handling: { label: 'botHandling', color: '#4facfe', icon: '[Bot]' },
-  Pending_Agent: { label: 'pending', color: '#f5576c', icon: '[Wait]' },
-  In_Progress: { label: 'inProgress', color: '#43e97b', icon: '[Chat]' },
-  Closed: { label: 'closed', color: '#667085', icon: '[Done]' },
+  Bot_Handling: { label: 'botHandling', color: '#7C5CFC', icon: '🤖' },
+  Pending_Agent: { label: 'pending', color: '#EF4444', icon: '⏳' },
+  In_Progress: { label: 'inProgress', color: '#10B981', icon: '💬' },
+  Closed: { label: 'closed', color: '#9CA3AF', icon: '✅' },
 };
 
 export default function Sidebar({
@@ -16,6 +18,9 @@ export default function Sidebar({
   statusFilter,
   onStatusFilterChange,
   onAcceptSession,
+  isAdmin,
+  queueStatus,
+  agentId,
 }) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,15 +67,52 @@ export default function Sidebar({
       {/* Header */}
       <div className="sidebar-header">
         <h2>{t('conversations')}</h2>
-        <span className="sidebar-count">{sessions.length}</span>
+        <motion.span
+          className="sidebar-count"
+          key={sessions.length}
+          initial={{ scale: 1.3 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+        >
+          {sessions.length}
+        </motion.span>
       </div>
+
+      {/* Queue Status (Admin) */}
+      <AnimatePresence>
+        {isAdmin && queueStatus && queueStatus.totalInQueue > 0 && (
+          <motion.div
+            className="sidebar-queue-status"
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="queue-status-header">
+              <span className="queue-status-icon"><Clock size={14} /></span>
+              <span>{t('queueMonitor')}</span>
+            </div>
+            <div className="queue-status-stats">
+              <div className="queue-stat">
+                <span className="stat-value">{queueStatus.totalInQueue}</span>
+                <span className="stat-label">{t('totalInQueue')}</span>
+              </div>
+              <div className="queue-stat">
+                <span className="stat-value">{queueStatus.averageWaitMinutes || 0}{t('minutes')}</span>
+                <span className="stat-label">{t('avgWaitTime')}</span>
+              </div>
+              <div className="queue-stat">
+                <span className="stat-value">{queueStatus.availableAgents || 0}</span>
+                <span className="stat-label">{t('availableAgents')}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Search */}
       <div className="sidebar-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
+        <Search size={16} />
         <input
           type="text"
           placeholder={t('search')}
@@ -113,53 +155,74 @@ export default function Sidebar({
             <p>{t('noConversations')}</p>
           </div>
         ) : (
-          filteredSessions.map((session) => {
-            const statusInfo = STATUS_MAP[session.status] || {};
-            const isSelected = selectedSession?.sessionId === session.sessionId;
+          <AnimatePresence initial={false}>
+            {filteredSessions.map((session, index) => {
+              const statusInfo = STATUS_MAP[session.status] || {};
+              const isSelected = selectedSession?.sessionId === session.sessionId;
+              const isAssignedToMe = session.assignedAgent?._id === agentId;
 
-            return (
-              <div
-                key={session.sessionId}
-                className={`sidebar-item ${isSelected ? 'selected' : ''}`}
-                onClick={() => onSelectSession(session)}
-              >
-                <div className="item-avatar">
-                  <span>{session.customerName?.charAt(0)?.toUpperCase() || 'K'}</span>
-                  <div
-                    className="item-status-dot"
-                    style={{ background: statusInfo.color }}
-                  />
-                </div>
-
-                <div className="item-content">
-                  <div className="item-top">
-                    <span className="item-name">{session.customerName || 'Khách hàng'}</span>
-                    <span className="item-time">{formatTime(session.lastMessageAt || session.updatedAt)}</span>
+              return (
+                <motion.div
+                  key={session.sessionId}
+                  className={`sidebar-item ${isSelected ? 'selected' : ''} ${isAssignedToMe ? 'assigned-to-me' : ''}`}
+                  onClick={() => onSelectSession(session)}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
+                  layout
+                  whileHover={{ x: 2 }}
+                >
+                  <div className="item-avatar">
+                    <span>{session.customerName?.charAt(0)?.toUpperCase() || 'K'}</span>
+                    <div
+                      className="item-status-dot"
+                      style={{ background: statusInfo.color }}
+                    />
                   </div>
-                  <div className="item-bottom">
-                    <span className="item-status" style={{ color: statusInfo.color }}>
-                      {statusInfo.icon} {t(statusInfo.label)}
-                    </span>
-                    {session.unreadCount > 0 && (
-                      <span className="item-unread">{session.unreadCount}</span>
-                    )}
-                  </div>
-                </div>
 
-                {session.status === 'Pending_Agent' && (
-                  <button
-                    className="item-accept-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAcceptSession(session.sessionId);
-                    }}
-                  >
-                    {t('accept')}
-                  </button>
-                )}
-              </div>
-            );
-          })
+                  <div className="item-content">
+                    <div className="item-top">
+                      <span className="item-name">{session.customerName || 'Khách hàng'}</span>
+                      <span className="item-time">{formatTime(session.lastMessageAt || session.updatedAt)}</span>
+                    </div>
+                    <div className="item-bottom">
+                      <span className="item-status" style={{ color: statusInfo.color }}>
+                        {statusInfo.icon} {t(statusInfo.label)}
+                      </span>
+                      {session.queuePosition && session.status === 'Pending_Agent' && (
+                        <span className="item-queue-pos">#{session.queuePosition}</span>
+                      )}
+                      {session.unreadCount > 0 && (
+                        <motion.span
+                          className="item-unread"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        >
+                          {session.unreadCount}
+                        </motion.span>
+                      )}
+                    </div>
+                  </div>
+
+                  {session.status === 'Pending_Agent' && (
+                    <motion.button
+                      className="item-accept-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAcceptSession(session.sessionId);
+                      }}
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {t('accept')}
+                    </motion.button>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         )}
       </div>
     </aside>

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, Hourglass, User, AlertTriangle, ClipboardList } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import Sidebar from '../components/Sidebar';
@@ -18,30 +20,86 @@ export default function Dashboard() {
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  const [agentStatus, setAgentStatus] = useState('available');
+  const [workloadInfo, setWorkloadInfo] = useState({ active: 0, max: 5 });
+  const [queueStatus, setQueueStatus] = useState(null);
+  const [adminAlert, setAdminAlert] = useState(null);
+
   useEffect(() => {
     agentSocket.connect();
 
+    const onConnect = () => {
+      if (agent?.id) {
+        agentSocket.emit('agent_online', { agentId: agent.id });
+      }
+    };
+
+    agentSocket.on('connect', onConnect);
+
+    if (agentSocket.connected && agent?.id) {
+      agentSocket.emit('agent_online', { agentId: agent.id });
+    }
+
     return () => {
+      agentSocket.off('connect', onConnect);
       agentSocket.disconnect();
     };
-  }, []);
+  }, [agent?.id]);
 
   const loadSessions = useCallback(async () => {
     try {
-      const params = {};
-      if (statusFilter !== 'all') {
-        params.status = statusFilter;
+      const res = await api.get('/sessions');
+      let sessionList = res.data.data.sessions;
+
+      if (!isAdmin) {
+        sessionList = sessionList.filter(s =>
+          s.assignedAgent?._id === agent?.id ||
+          s.status === 'Pending_Agent' ||
+          s.status === 'Bot_Handling'
+        );
       }
-      const res = await api.get('/sessions', { params });
-      setSessions(res.data.data.sessions);
+
+      setSessions(sessionList);
     } catch (err) {
       console.error('Load sessions error:', err);
     }
-  }, [statusFilter]);
+  }, [agent?.id, isAdmin]);
 
   useEffect(() => {
     loadSessions();
   }, [loadSessions]);
+
+  useEffect(() => {
+    const loadWorkload = async () => {
+      try {
+        const res = await api.get('/auth/me');
+        const agentData = res.data.data.agent;
+        setWorkloadInfo({
+          active: agentData.currentActiveChats || 0,
+          max: agentData.maxConcurrentChats || 5,
+        });
+        setAgentStatus(agentData.agentStatus || 'available');
+      } catch (err) {
+        console.error('Load workload error:', err);
+      }
+    };
+    loadWorkload();
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const loadQueueStatus = async () => {
+      try {
+        const res = await api.get('/sessions/queue/status');
+        setQueueStatus(res.data.data);
+      } catch (err) {
+        console.error('Queue status error:', err);
+      }
+    };
+    loadQueueStatus();
+    const interval = setInterval(loadQueueStatus, 15000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   const loadMessages = useCallback(async (sessionId) => {
     try {
@@ -69,11 +127,19 @@ export default function Dashboard() {
 
     const handleSessionUpdated = () => {
       loadSessions();
+      api.get('/auth/me').then(res => {
+        const agentData = res.data.data.agent;
+        setWorkloadInfo({
+          active: agentData.currentActiveChats || 0,
+          max: agentData.maxConcurrentChats || 5,
+        });
+        setAgentStatus(agentData.agentStatus || 'available');
+      }).catch(() => {});
     };
 
-    const handleNewPending = ({ sessionId, customerName }) => {
+    const handleNewPending = ({ sessionId, customerName, queuePosition }) => {
       setNotification({
-        message: `${t('newCustomer')} ${customerName || ''}`,
+        message: `${t('newCustomer')} ${customerName || ''} (#${queuePosition || '?'})`,
         sessionId,
       });
       setTimeout(() => setNotification(null), 5000);
@@ -89,18 +155,54 @@ export default function Dashboard() {
       }
     };
 
+    const handleAutoAssigned = ({ sessionId, agentId, agentName }) => {
+      if (agentId === agent?.id) {
+        setNotification({
+          message: <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ClipboardList size={16} /> {t('autoAssigned')}: {sessionId.slice(0, 8)}...</span>,
+          sessionId,
+        });
+        setTimeout(() => setNotification(null), 5000);
+      }
+      loadSessions();
+    };
+
+    const handleQueueStatus = (status) => {
+      setQueueStatus(status);
+    };
+
+    const handleAdminAlert = (alert) => {
+      if (isAdmin) {
+        setAdminAlert(alert);
+        setTimeout(() => setAdminAlert(null), 10000);
+      }
+    };
+
+    const handleAgentStatusUpdated = ({ agentId: aid, status }) => {
+      if (aid === agent?.id) {
+        setAgentStatus(status);
+      }
+    };
+
     agentSocket.on('receive_message', handleNewMessage);
     agentSocket.on('session_updated', handleSessionUpdated);
     agentSocket.on('new_pending_session', handleNewPending);
     agentSocket.on('session_accepted', handleSessionAccepted);
+    agentSocket.on('session_auto_assigned', handleAutoAssigned);
+    agentSocket.on('queue_status', handleQueueStatus);
+    agentSocket.on('admin_alert', handleAdminAlert);
+    agentSocket.on('agent_status_updated', handleAgentStatusUpdated);
 
     return () => {
       agentSocket.off('receive_message', handleNewMessage);
       agentSocket.off('session_updated', handleSessionUpdated);
       agentSocket.off('new_pending_session', handleNewPending);
       agentSocket.off('session_accepted', handleSessionAccepted);
+      agentSocket.off('session_auto_assigned', handleAutoAssigned);
+      agentSocket.off('queue_status', handleQueueStatus);
+      agentSocket.off('admin_alert', handleAdminAlert);
+      agentSocket.off('agent_status_updated', handleAgentStatusUpdated);
     };
-  }, [loadSessions, selectedSession, t]);
+  }, [loadSessions, selectedSession, t, agent?.id, isAdmin]);
 
   const handleSelectSession = (session) => {
     if (selectedSession) {
@@ -167,53 +269,100 @@ export default function Dashboard() {
     }
   };
 
+  const toggleAgentStatus = () => {
+    const newStatus = agentStatus === 'available' ? 'busy' : 'available';
+    setAgentStatus(newStatus);
+    agentSocket.emit('agent_status_change', {
+      agentId: agent.id,
+      status: newStatus,
+    });
+  };
+
   return (
     <div className="dashboard">
       {/* Notification toast */}
-      {notification && (
-        <div className="dashboard-notification" onClick={() => {
-          setNotification(null);
-        }}>
-          <div className="notification-icon"></div>
-          <div className="notification-text">{notification.message}</div>
-        </div>
-      )}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            className="dashboard-notification"
+            onClick={() => setNotification(null)}
+            initial={{ opacity: 0, x: 50, y: 0 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          >
+            <div className="notification-text">{notification.message}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Alert */}
+      <AnimatePresence>
+        {adminAlert && (
+          <motion.div
+            className="dashboard-notification admin-alert"
+            onClick={() => setAdminAlert(null)}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            style={{ top: notification ? '80px' : '20px' }}
+          >
+            <div className="notification-icon"><AlertTriangle size={18} /></div>
+            <div className="notification-text">{adminAlert.message}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <header className="dashboard-header">
         <div className="header-left">
-          <div className="header-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </div>
-          <h1 className="header-title">{t('appName')}</h1>
+          <h1 className="header-title">
+            <MessageSquare size={20} /> {t('conversations') || 'Chat'}
+          </h1>
         </div>
 
         <div className="header-right">
-          {/* Navigation links */}
-          {isAdmin && (
-            <a href="/knowledge" className="header-nav-link">
-               {t('knowledgeBase')}
-            </a>
+          {/* Queue Monitor (Admin only) */}
+          {isAdmin && queueStatus && (
+            <div className="header-queue-monitor">
+              <span className="queue-badge" title={t('queueMonitor')} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Hourglass size={14} /> {queueStatus.totalInQueue || 0}
+              </span>
+              <span className="queue-agents" title={t('availableAgents')} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <User size={14} /> {queueStatus.availableAgents || 0}/{queueStatus.totalOnlineAgents || 0}
+              </span>
+            </div>
           )}
 
-          {/* Agent info */}
-          <div className="header-agent">
-            <div className="agent-avatar">
-              {agent?.displayName?.charAt(0)?.toUpperCase()}
+          {/* Workload indicator */}
+          <div className="header-workload" title={t('workload')}>
+            <div className="workload-bar">
+              <motion.div
+                className="workload-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${(workloadInfo.active / workloadInfo.max) * 100}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                style={{
+                  backgroundColor: workloadInfo.active >= workloadInfo.max ? '#EF4444' :
+                    workloadInfo.active >= workloadInfo.max * 0.7 ? '#F59E0B' : '#10B981'
+                }}
+              />
             </div>
-            <span className="agent-name">{agent?.displayName}</span>
-            <span className="agent-role-badge">{agent?.role === 'admin' ? t('admin') : t('agent')}</span>
+            <span className="workload-text">{workloadInfo.active}/{workloadInfo.max}</span>
           </div>
 
-          <button className="header-logout" onClick={logout} title={t('logout')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16,17 21,12 16,7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
+          {/* Agent status toggle */}
+          <motion.button
+            className={`header-status-toggle ${agentStatus}`}
+            onClick={toggleAgentStatus}
+            title={agentStatus === 'available' ? t('statusAvailable') : t('statusBusy')}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <span className={`status-dot ${agentStatus}`}></span>
+            {agentStatus === 'available' ? t('available') : t('busy')}
+          </motion.button>
         </div>
       </header>
 
@@ -227,6 +376,9 @@ export default function Dashboard() {
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           onAcceptSession={handleAcceptSession}
+          isAdmin={isAdmin}
+          queueStatus={queueStatus}
+          agentId={agent?.id}
         />
 
         {/* Chat area */}
@@ -245,7 +397,11 @@ export default function Dashboard() {
             />
           ) : (
             <div className="dashboard-empty">
-              <div className="empty-icon"></div>
+              <motion.div
+                className="empty-icon"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              />
               <h2>{t('selectConversation')}</h2>
               <p>{t('noConversations')}</p>
             </div>
@@ -253,9 +409,18 @@ export default function Dashboard() {
         </div>
 
         {/* Customer info panel */}
-        {selectedSession && (
-          <CustomerInfo session={selectedSession} />
-        )}
+        <AnimatePresence>
+          {selectedSession && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 'auto', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CustomerInfo session={selectedSession} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

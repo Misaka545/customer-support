@@ -35,6 +35,14 @@ const sessionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  queuePosition: {
+    type: Number,
+    default: null,
+  },
+  queuedAt: {
+    type: Date,
+    default: null,
+  },
 }, {
   timestamps: true,
 });

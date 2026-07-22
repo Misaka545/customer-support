@@ -1,0 +1,72 @@
+/* CustomActionMenu Component Styles */
+.custom-action-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-action-trigger {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.custom-action-trigger:hover, .custom-action-trigger.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.custom-action-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 120px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.custom-action-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.custom-action-item:hover {
+  background: var(--bg-secondary);
+  color: var(--primary);
+}
+
+.custom-action-item.is-danger {
+  color: var(--danger);
+}
+
+.custom-action-item.is-danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}

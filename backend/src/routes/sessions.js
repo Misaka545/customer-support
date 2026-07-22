@@ -2,7 +2,9 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const Session = require('../models/Session');
 const Message = require('../models/Message');
-const { auth } = require('../middleware/auth');
+const Agent = require('../models/Agent');
+const { auth, adminOnly } = require('../middleware/auth');
+const queue = require('../services/queue');
 
 const router = express.Router();
 
@@ -71,6 +73,132 @@ router.get('/', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Get sessions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server.',
+    });
+  }
+});
+
+/**
+ * GET /api/sessions/queue/status
+ * Lấy trạng thái hàng đợi (Admin)
+ */
+router.get('/queue/status', auth, async (req, res) => {
+  try {
+    const status = await queue.getQueueStatus();
+    res.json({
+      success: true,
+      data: status,
+    });
+  } catch (error) {
+    console.error('Queue status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server.',
+    });
+  }
+});
+
+/**
+ * GET /api/sessions/analytics/overview
+ * Lấy số liệu thống kê tổng quan (Admin)
+ */
+router.get('/analytics/overview', auth, adminOnly, async (req, res) => {
+  try {
+    const queueStatus = await queue.getQueueStatus();
+    
+    // Thống kê trạng thái sessions
+    const statusCounts = await Session.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    
+    let totalSessions = 0;
+    let pendingSessions = 0;
+    let inProgressSessions = 0;
+    let closedSessions = 0;
+    let botHandling = 0;
+
+    statusCounts.forEach(item => {
+      totalSessions += item.count;
+      if (item._id === 'Pending_Agent') pendingSessions = item.count;
+      else if (item._id === 'In_Progress') inProgressSessions = item.count;
+      else if (item._id === 'Closed') closedSessions = item.count;
+      else if (item._id === 'Bot_Handling') botHandling = item.count;
+    });
+
+    const totalAgents = await Agent.countDocuments();
+    const onlineAgents = await Agent.countDocuments({ isOnline: true });
+
+    // Thống kê 7 ngày gần nhất từ database thực tế
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+    const dailySessions = await Session.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: {
+            day: { $dayOfMonth: '$createdAt' },
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' },
+            status: '$status',
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const last7DaysData = Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      const dayNum = d.getDate();
+      const monthNum = d.getMonth() + 1;
+      const yearNum = d.getFullYear();
+
+      let total = 0;
+      let closed = 0;
+      let botHandled = 0;
+      let inProgress = 0;
+
+      dailySessions.forEach((item) => {
+        if (item._id.day === dayNum && item._id.month === monthNum && item._id.year === yearNum) {
+          total += item.count;
+          if (item._id.status === 'Closed') closed += item.count;
+          else if (item._id.status === 'Bot_Handling') botHandled += item.count;
+          else if (item._id.status === 'In_Progress') inProgress += item.count;
+        }
+      });
+
+      return {
+        name: d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+        total,
+        closed,
+        botHandled,
+        inProgress,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        metrics: {
+          totalSessions,
+          pendingSessions,
+          inProgressSessions,
+          closedSessions,
+          botHandling,
+          totalAgents,
+          onlineAgents,
+          totalInQueue: queueStatus.totalInQueue,
+          avgWaitMinutes: queueStatus.averageWaitMinutes,
+        },
+        chartData: last7DaysData,
+      },
+    });
+  } catch (error) {
+    console.error('Analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi server.',

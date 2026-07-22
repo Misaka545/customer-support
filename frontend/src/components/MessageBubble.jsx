@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import './MessageBubble.css';
 
 export default function MessageBubble({ message }) {
@@ -13,9 +14,14 @@ export default function MessageBubble({ message }) {
   // System message
   if (sender === 'System' || messageType === 'system') {
     return (
-      <div className="msg-system">
+      <motion.div
+        className="msg-system"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+      >
         <span>{content}</span>
-      </div>
+      </motion.div>
     );
   }
 
@@ -23,7 +29,12 @@ export default function MessageBubble({ message }) {
   const isBot = sender === 'Bot';
 
   return (
-    <div className={`msg-wrapper ${!isCustomer ? 'msg-right' : 'msg-left'}`}>
+    <motion.div
+      className={`msg-wrapper ${!isCustomer ? 'msg-right' : 'msg-left'}`}
+      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+    >
       {isCustomer && (
         <div className="msg-avatar msg-avatar-customer">
           {senderName?.charAt(0)?.toUpperCase() || 'K'}
@@ -44,9 +55,17 @@ export default function MessageBubble({ message }) {
           {messageType === 'suggestion' && suggestions?.length > 0 && (
             <div className="msg-suggestions">
               {suggestions.map((suggestion, i) => (
-                <button key={i} className="msg-suggestion-chip">
+                <motion.button
+                  key={i}
+                  className="msg-suggestion-chip"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.2 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
                   {suggestion}
-                </button>
+                </motion.button>
               ))}
             </div>
           )}
@@ -54,6 +73,6 @@ export default function MessageBubble({ message }) {
 
         <span className="msg-time">{formatTime(createdAt)}</span>
       </div>
-    </div>
+    </motion.div>
   );
 }

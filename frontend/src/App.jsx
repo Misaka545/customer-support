@@ -4,6 +4,9 @@ import { LanguageProvider } from './context/LanguageContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import KnowledgeBase from './pages/KnowledgeBase';
+import AgentManagement from './pages/AgentManagement';
+import Analytics from './pages/Analytics';
+import AdminLayout from './components/AdminLayout';
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { agent, loading, isAdmin } = useAuth();
@@ -55,12 +58,30 @@ function AppRoutes() {
       } />
       <Route path="/" element={
         <ProtectedRoute>
-          <Dashboard />
+          <AdminLayout>
+            <Dashboard />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/analytics" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <Analytics />
+          </AdminLayout>
         </ProtectedRoute>
       } />
       <Route path="/knowledge" element={
         <ProtectedRoute adminOnly>
-          <KnowledgeBase />
+          <AdminLayout>
+            <KnowledgeBase />
+          </AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/agents" element={
+        <ProtectedRoute adminOnly>
+          <AdminLayout>
+            <AgentManagement />
+          </AdminLayout>
         </ProtectedRoute>
       } />
       <Route path="*" element={<Navigate to="/" replace />} />

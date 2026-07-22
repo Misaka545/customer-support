@@ -30,6 +30,22 @@ const agentSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  agentStatus: {
+    type: String,
+    enum: ['available', 'busy', 'offline'],
+    default: 'offline',
+  },
+  maxConcurrentChats: {
+    type: Number,
+    default: 5,
+    min: 1,
+    max: 20,
+  },
+  currentActiveChats: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   avatar: {
     type: String,
     default: '',

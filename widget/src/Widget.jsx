@@ -18,6 +18,9 @@ export default function Widget() {
   const socketRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Queue state
+  const [queueInfo, setQueueInfo] = useState(null); // { position, total, estimatedWaitMinutes }
+
   // Khởi tạo session
   const initSession = useCallback(async () => {
     let sid = localStorage.getItem('cskh-session-id');
@@ -97,14 +100,30 @@ export default function Widget() {
 
     socket.on('agent_joined', ({ agentName }) => {
       setAgentTyping(false);
+      // Agent joined → clear queue
+      setQueueInfo(null);
     });
 
     socket.on('session_closed', () => {
-      // Có thể hiện thông báo
+      setQueueInfo(null);
     });
 
     socket.on('handoff_initiated', ({ suggestions }) => {
       // Suggestions đã được gửi qua message
+    });
+
+    // Queue position updates
+    socket.on('queue_position', ({ position, total, estimatedWaitMinutes }) => {
+      if (position === 0) {
+        setQueueInfo(null); // Assigned — no longer in queue
+      } else {
+        setQueueInfo({ position, total, estimatedWaitMinutes });
+      }
+    });
+
+    // Queue timeout
+    socket.on('queue_timeout', () => {
+      setQueueInfo(null);
     });
 
     return () => {
@@ -203,6 +222,23 @@ export default function Widget() {
             </svg>
           </button>
         </div>
+
+        {/* Queue Banner */}
+        {queueInfo && (
+          <div className="csai-queue-banner">
+            <div className="csai-queue-icon">
+              <div className="queue-spinner"></div>
+            </div>
+            <div className="csai-queue-info">
+              <span className="csai-queue-position">
+                Vị trí #{queueInfo.position} trong hàng đợi
+              </span>
+              <span className="csai-queue-wait">
+                Thời gian chờ dự kiến: ~{queueInfo.estimatedWaitMinutes} phút
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="csai-messages">

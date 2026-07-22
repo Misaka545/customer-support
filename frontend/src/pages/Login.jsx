@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import './Login.css';
@@ -29,38 +30,77 @@ export default function Login() {
       {/* Animated background */}
       <div className="login-bg">
         <div className="login-bg-gradient"></div>
-        <div className="login-bg-orb login-bg-orb-1"></div>
-        <div className="login-bg-orb login-bg-orb-2"></div>
-        <div className="login-bg-orb login-bg-orb-3"></div>
+        <motion.div
+          className="login-bg-orb login-bg-orb-1"
+          animate={{ x: [0, 30, -20, 0], y: [0, 20, 30, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="login-bg-orb login-bg-orb-2"
+          animate={{ x: [0, -20, 25, 0], y: [0, -30, -15, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="login-bg-orb login-bg-orb-3"
+          animate={{ x: [0, -30, 15, 0], y: [0, 20, -10, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
       </div>
 
       {/* Login card */}
-      <div className="login-card">
+      <motion.div
+        className="login-card"
+        initial={{ opacity: 0, y: 30, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="login-card-header">
-          <div className="login-logo">
+          <motion.div
+            className="login-logo"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
             <div className="login-logo-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </div>
             <h1>{t('appName')}</h1>
-          </div>
-          <p className="login-subtitle">{t('loginSubtitle')}</p>
+          </motion.div>
+          <motion.p
+            className="login-subtitle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35, duration: 0.4 }}
+          >
+            {t('loginSubtitle')}
+          </motion.p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           {error && (
-            <div className="login-error">
+            <motion.div
+              className="login-error"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={{ duration: 0.2 }}
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="15" y1="9" x2="9" y2="15" />
                 <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
               {error}
-            </div>
+            </motion.div>
           )}
 
-          <div className="login-field">
+          <motion.div
+            className="login-field"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
             <label htmlFor="username">{t('username')}</label>
             <div className="login-input-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -77,9 +117,14 @@ export default function Login() {
                 autoFocus
               />
             </div>
-          </div>
+          </motion.div>
 
-          <div className="login-field">
+          <motion.div
+            className="login-field"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
+          >
             <label htmlFor="password">{t('password')}</label>
             <div className="login-input-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,12 +140,17 @@ export default function Login() {
                 required
               />
             </div>
-          </div>
+          </motion.div>
 
-          <button
+          <motion.button
             type="submit"
             className="login-button"
             disabled={loading}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             {loading ? (
               <span className="login-spinner"></span>
@@ -113,9 +163,9 @@ export default function Login() {
                 </svg>
               </>
             )}
-          </button>
+          </motion.button>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

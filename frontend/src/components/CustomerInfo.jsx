@@ -1,5 +1,18 @@
+import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import './CustomerInfo.css';
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.06 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25 } }
+};
 
 export default function CustomerInfo({ session }) {
   const { t } = useLanguage();
@@ -17,64 +30,74 @@ export default function CustomerInfo({ session }) {
   };
 
   const statusColors = {
-    Bot_Handling: '#4facfe',
-    Pending_Agent: '#f5576c',
-    In_Progress: '#43e97b',
-    Closed: '#667085',
+    Bot_Handling: '#7C5CFC',
+    Pending_Agent: '#EF4444',
+    In_Progress: '#10B981',
+    Closed: '#9CA3AF',
   };
 
   return (
     <aside className="customer-info">
       <h3 className="ci-title">{t('customerInfo')}</h3>
 
-      <div className="ci-avatar-section">
+      <motion.div
+        className="ci-avatar-section"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="ci-avatar">
           {session.customerName?.charAt(0)?.toUpperCase() || 'K'}
         </div>
         <h4 className="ci-name">{session.customerName || 'Khách hàng'}</h4>
-      </div>
+      </motion.div>
 
-      <div className="ci-details">
-        <div className="ci-field">
+      <motion.div
+        className="ci-details"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div className="ci-field" variants={itemVariants}>
           <label>{t('sessionId')}</label>
           <span className="ci-session-id">{session.sessionId?.substring(0, 8)}...</span>
-        </div>
+        </motion.div>
 
-        <div className="ci-field">
+        <motion.div className="ci-field" variants={itemVariants}>
           <label>{t('status')}</label>
           <span className="ci-status" style={{ color: statusColors[session.status] }}>
             ● {t(session.status === 'Bot_Handling' ? 'botHandling' :
               session.status === 'Pending_Agent' ? 'pending' :
               session.status === 'In_Progress' ? 'inProgress' : 'closed')}
           </span>
-        </div>
+        </motion.div>
 
-        <div className="ci-field">
+        <motion.div className="ci-field" variants={itemVariants}>
           <label>{t('createdAt')}</label>
           <span>{formatDate(session.createdAt)}</span>
-        </div>
+        </motion.div>
 
-        <div className="ci-field">
+        <motion.div className="ci-field" variants={itemVariants}>
           <label>{t('assignedTo')}</label>
           <span>
             {session.assignedAgent?.displayName || t('notAssigned')}
           </span>
-        </div>
+        </motion.div>
 
         {session.metadata?.page && (
-          <div className="ci-field">
+          <motion.div className="ci-field" variants={itemVariants}>
             <label>Trang đang xem</label>
             <span className="ci-page">{session.metadata.page}</span>
-          </div>
+          </motion.div>
         )}
 
         {session.metadata?.userAgent && (
-          <div className="ci-field">
+          <motion.div className="ci-field" variants={itemVariants}>
             <label>Trình duyệt</label>
             <span className="ci-ua">{session.metadata.userAgent?.substring(0, 40)}...</span>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     </aside>
   );
 }
